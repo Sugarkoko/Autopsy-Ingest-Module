@@ -59,10 +59,4 @@ Restart Autopsy. The module appears as "Comprehensive URL Phishing Extractor" un
 
 If you want to share this as a zip, compress the folder contents and distribute. Autopsy users can unzip into their Autopsy `python_modules` directory.
 
-## License
 
-See `LICENSE` for licensing details.
-
----
-
-Maintained by: Christian (and contributors)
