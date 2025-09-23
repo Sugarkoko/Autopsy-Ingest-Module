@@ -1,0 +1,43 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Python / Jython
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+.venv/
+venv/
+.env
+
+# Editors/IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs
+logs/
+*.log
+
+# Build / dist / archives
+build/
+dist/
+*.zip
+*.tar
+*.tar.gz
+
+# Reports and generated artifacts
+reports/
+URL_Phishing_Report/
+
+# Autopsy case temp/output (if any are copied here by mistake)
+Case*/
+*.aut
+
+# Misc
+~$*
+*.tmp
