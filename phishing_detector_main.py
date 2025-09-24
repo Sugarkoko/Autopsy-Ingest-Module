@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Comprehensive Autopsy Ingest Module for Web URL Extraction and Phishing Detection
-Main module file - ties together all the browser processors
-
-This is the refactored main module that coordinates all browser-specific processors
-while maintaining 100% functionality of the original monolithic module.
+Autopsy Ingest Module for Web URL Extraction and Phishing Detection
+Main module file 
 
 Supported browsers and sources:
 - Chromium-based: Chrome, Edge, Brave, UC Browser, Yandex, Opera, SalamWeb
@@ -12,8 +9,6 @@ Supported browsers and sources:
 - Internet Explorer
 - Safari
 - URL sources: History, Bookmarks, Downloads, Cookies, Form Data, Cache, Favicons, Login Data
-
-Author: Created for URL Phishing Detection Project
 """
 
 import jarray
