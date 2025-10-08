@@ -25,8 +25,8 @@ class ChromiumProcessor:
         self.module = module_instance
         
     def process_all_chromium_browsers(self, dataSource, progressBar):
-        """Process all Chromium-based browsers comprehensively"""
-        self.module.log(Level.INFO, "Processing Chromium-based browsers")
+        """Process all Chromium-based browsers - HISTORY ONLY (no bookmarks, downloads, cookies)"""
+        self.module.log(Level.INFO, "Processing Chromium-based browsers - HISTORY ONLY")
         
         try:
             for browser_name, browser_path in CHROMIUM_BROWSERS.items():
@@ -36,14 +36,11 @@ class ChromiumProcessor:
                 progressBar.progress("Processing " + browser_name + "...")
                 self.module.log(Level.INFO, "Processing browser: " + browser_name)
                 
-                # Process all URL sources for this browser
+                # Process HISTORY ONLY - skip bookmarks, downloads, cookies, logins, autofill, favicons
                 self.process_chromium_history(browser_name, browser_path)
-                self.process_chromium_bookmarks(browser_name, browser_path)
-                self.process_chromium_downloads(browser_name, browser_path)
-                self.process_chromium_cookies(browser_name, browser_path)
-                self.process_chromium_logins(browser_name, browser_path)
-                self.process_chromium_autofill(browser_name, browser_path)
-                self.process_chromium_favicons(browser_name, browser_path)
+                
+                # Skip all other sources to match standard web history
+                self.module.log(Level.INFO, "Skipping " + browser_name + " bookmarks, downloads, cookies, logins, autofill, and favicons to match standard web history")
                 
         except Exception as e:
             self.module.log(Level.WARNING, "Error processing Chromium browsers: " + str(e))

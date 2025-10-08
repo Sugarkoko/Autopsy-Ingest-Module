@@ -25,13 +25,16 @@ class SafariEdgeProcessor:
         self.module = module_instance
         
     def process_safari_browsers(self, dataSource, progressBar):
-        """Process Safari browsers (primarily on macOS/iOS but may appear on Windows)"""
-        self.module.log(Level.INFO, "Processing Safari browsers")
+        """Process Safari browsers - HISTORY ONLY (primarily on macOS/iOS but may appear on Windows)"""
+        self.module.log(Level.INFO, "Processing Safari browsers - HISTORY ONLY")
         
         try:
             # Safari uses various file formats, mainly plist and sqlite
             progressBar.progress("Processing Safari History...")
             self.process_safari_history()
+            
+            # Skip bookmarks to match standard web history
+            self.module.log(Level.INFO, "Skipping Safari bookmarks to match standard web history")
             
         except Exception as e:
             self.module.log(Level.WARNING, "Error processing Safari: " + str(e))
@@ -55,8 +58,8 @@ class SafariEdgeProcessor:
             self.module.log(Level.WARNING, "Error processing Safari history: " + str(e))
 
     def process_edge_legacy(self, dataSource, progressBar):
-        """Process Microsoft Edge Legacy (pre-Chromium)"""
-        self.module.log(Level.INFO, "Processing Microsoft Edge Legacy")
+        """Process Microsoft Edge Legacy (pre-Chromium) - HISTORY ONLY"""
+        self.module.log(Level.INFO, "Processing Microsoft Edge Legacy - HISTORY ONLY")
         
         try:
             # Edge Legacy uses ESE databases
@@ -82,6 +85,9 @@ class SafariEdgeProcessor:
                     # Still process as potential Edge Legacy if we haven't processed it as IE
                     self.module.log(Level.INFO, "Processing potential Edge Legacy file: " + edge_file.getParentPath() + "/" + edge_file.getName())
                     self.parse_edge_webcache_database(edge_file, "Edge Legacy")
+            
+            # Edge Legacy only processes WebCache (history) - no bookmarks or other sources
+            self.module.log(Level.INFO, "Edge Legacy only processes WebCache history - no additional sources to skip")
                     
         except Exception as e:
             self.module.log(Level.WARNING, "Error processing Edge Legacy: " + str(e))

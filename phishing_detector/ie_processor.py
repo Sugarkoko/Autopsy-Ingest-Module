@@ -22,8 +22,8 @@ class InternetExplorerProcessor:
         self.module = module_instance
         
     def process_internet_explorer(self, dataSource, progressBar):
-        """Process Internet Explorer browsers"""
-        self.module.log(Level.INFO, "Starting Internet Explorer processing")
+        """Process Internet Explorer browsers - HISTORY ONLY (no bookmarks, cookies)"""
+        self.module.log(Level.INFO, "Starting Internet Explorer processing - HISTORY ONLY")
         
         try:
             # Verify we have necessary components
@@ -37,21 +37,12 @@ class InternetExplorerProcessor:
             if self.module.context.dataSourceIngestIsCancelled():
                 return
             
-            progressBar.progress("Processing IE Bookmarks...")
-            self.process_ie_bookmarks()
-            
-            if self.module.context.dataSourceIngestIsCancelled():
-                return
-            
-            progressBar.progress("Processing IE Cookies...")
-            self.process_ie_cookies()
-            
-            if self.module.context.dataSourceIngestIsCancelled():
-                return
-            
             progressBar.progress("Processing IE WebCache...")
             self.module.log(Level.INFO, "About to process IE WebCache files")
             self.process_ie_webcache()
+            
+            # Skip bookmarks and cookies to match standard web history
+            self.module.log(Level.INFO, "Skipping IE bookmarks and cookies to match standard web history")
             
             self.module.log(Level.INFO, "Completed Internet Explorer processing")
             

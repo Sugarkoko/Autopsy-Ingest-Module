@@ -22,36 +22,15 @@ class FirefoxProcessor:
         self.module = module_instance
         
     def process_all_firefox_browsers(self, dataSource, progressBar):
-        """Process Mozilla Firefox browsers comprehensively"""
-        self.module.log(Level.INFO, "Processing Mozilla Firefox browsers")
+        """Process Mozilla Firefox browsers - HISTORY ONLY (no bookmarks, downloads, cookies)"""
+        self.module.log(Level.INFO, "Processing Mozilla Firefox browsers - HISTORY ONLY")
         
         try:
             progressBar.progress("Processing Firefox History...")
             self.process_firefox_history()
             
-            if self.module.context.dataSourceIngestIsCancelled():
-                return
-            
-            progressBar.progress("Processing Firefox Bookmarks...")
-            self.process_firefox_bookmarks()
-            
-            if self.module.context.dataSourceIngestIsCancelled():
-                return
-            
-            progressBar.progress("Processing Firefox Downloads...")
-            self.process_firefox_downloads()
-            
-            if self.module.context.dataSourceIngestIsCancelled():
-                return
-            
-            progressBar.progress("Processing Firefox Cookies...")
-            self.process_firefox_cookies()
-            
-            if self.module.context.dataSourceIngestIsCancelled():
-                return
-            
-            progressBar.progress("Processing Firefox Form History...")
-            self.process_firefox_form_history()
+            # Skip bookmarks, downloads, cookies, and form history to match standard web history
+            self.module.log(Level.INFO, "Skipping Firefox bookmarks, downloads, cookies, and form history to match standard web history")
             
         except Exception as e:
             self.module.log(Level.WARNING, "Error processing Firefox browsers: " + str(e))
@@ -157,7 +136,7 @@ class FirefoxProcessor:
             self.module.log(Level.WARNING, "Error processing Firefox form history: " + str(e))
 
     def parse_firefox_places_database(self, places_file, browser_name="Firefox"):
-        """Parse Firefox places.sqlite database for history and bookmarks"""
+        """Parse Firefox places.sqlite database for HISTORY ONLY (no bookmarks, downloads)"""
         self.module.log(Level.INFO, "Parsing " + browser_name + " places database: " + places_file.getName())
         
         try:
@@ -170,14 +149,11 @@ class FirefoxProcessor:
             # Connect to SQLite database
             dbConn = DriverManager.getConnection("jdbc:sqlite:" + temp_db_path)
             
-            # Parse history
+            # Parse history ONLY - skip bookmarks and downloads to match standard web history
             self.parse_firefox_history_from_db(dbConn, places_file, browser_name)
             
-            # Parse bookmarks
-            self.parse_firefox_bookmarks_from_db(dbConn, places_file, browser_name)
-            
-            # Parse downloads if downloads table exists
-            self.parse_firefox_downloads_from_places(dbConn, places_file, browser_name)
+            # Skip bookmarks and downloads parsing
+            self.module.log(Level.INFO, "Skipping bookmarks and downloads parsing to match standard web history")
             
             dbConn.close()
             

@@ -12,7 +12,7 @@ from org.sleuthkit.autopsy.casemodule import Case
 
 
 class ArtifactCreator:
-    """Creates artifacts for URLs found during browser processing"""
+    """Creates artifacts for URLs found during browser processing - VERSION 2.2"""
     
     def __init__(self, module_instance):
         """Initialize with reference to main module instance"""
@@ -33,6 +33,20 @@ class ArtifactCreator:
             
             # Extract domain from URL
             domain = self.extract_domain(url)
+            
+            # Validate required fields before creating artifact
+            if not url or not url.strip():
+                self.module.log(Level.WARNING, "Skipping artifact creation - URL is empty or null")
+                return
+                
+            if not browser_type or not browser_type.strip():
+                self.module.log(Level.WARNING, "Skipping artifact creation - Browser type is empty or null")
+                return
+                
+            # Check if we have meaningful data - require valid timestamp
+            if timestamp <= 0:
+                self.module.log(Level.WARNING, "Skipping artifact creation - No valid date accessed (timestamp: " + str(timestamp) + ")")
+                return
             
             # Get phishing classification (blank for now as requested)
             classification = self.classify_url_phishing(url)
@@ -93,21 +107,26 @@ class ArtifactCreator:
                                             module_name, browser_type)
             attributes.append(att_browser)
             
-            # Classification - try custom attribute first, then fallback (working pattern)
+            # Classification - use custom attribute (REQUIRED - no fallback)
             skCase = Case.getCurrentCase().getSleuthkitCase()
             try:
-                # Try to use custom classification attribute
+                # Get custom classification attribute - this will fail if not properly created
                 classification_attr_type = skCase.getAttributeType("TSK_PHISHING_CLASSIFICATION")
+                if classification_attr_type is None:
+                    error_msg = "CRITICAL: Custom classification attribute TSK_PHISHING_CLASSIFICATION is null - attribute may not exist"
+                    self.module.log(Level.SEVERE, error_msg)
+                    raise Exception(error_msg)
+                
                 att_classification = BlackboardAttribute(classification_attr_type,
                                                        module_name, 
                                                        classification if classification else "")
                 attributes.append(att_classification)
-            except:
-                # Fall back to comment attribute if custom one fails
-                att_classification = BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COMMENT,
-                                                       module_name, 
-                                                       classification if classification else "")
-                attributes.append(att_classification)
+                self.module.log(Level.INFO, "Using custom TSK_PHISHING_CLASSIFICATION attribute for classification")
+            except Exception as e:
+                # This should never happen if module startup succeeded, but fail hard if it does
+                error_msg = "CRITICAL: Custom classification attribute not available: " + str(e)
+                self.module.log(Level.SEVERE, error_msg)
+                raise Exception(error_msg)
             
             # Add description for better identification
             att_description = BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DESCRIPTION,
