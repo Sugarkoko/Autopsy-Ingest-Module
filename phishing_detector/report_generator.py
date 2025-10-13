@@ -238,10 +238,9 @@ class ReportGenerator:
                 pass
             # Top domains table
             html.append('<div class="table-card"><h2>Top Domains</h2>')
-            html.append('<table><thead><tr><th>Domain</th><th>URL Count</th><th>Percentage</th></tr></thead><tbody>')
+            html.append('<table><thead><tr><th>Domain</th><th>URL Count</th></tr></thead><tbody>')
             for d, c in top_domains:
-                percentage = round((c / total_urls) * 100, 1) if total_urls > 0 else 0
-                html.append('<tr><td>' + d + '</td><td>' + str(c) + '</td><td>' + str(percentage) + '%</td></tr>')
+                html.append('<tr><td>' + d + '</td><td>' + str(c) + '</td></tr>')
             html.append('</tbody></table></div>')
             
             html.append('</div>')  # Close container
