@@ -9,6 +9,7 @@ from java.util.logging import Level
 
 from org.sleuthkit.datamodel import BlackboardArtifact, BlackboardAttribute
 from org.sleuthkit.autopsy.casemodule import Case
+from phishing_detector.ml_bridge import MLBridge
 
 
 class ArtifactCreator:
@@ -17,6 +18,7 @@ class ArtifactCreator:
     def __init__(self, module_instance):
         """Initialize with reference to main module instance"""
         self.module = module_instance
+        self.ml_bridge = None
         
     def create_url_artifact(self, source_file, url, timestamp, browser_type):
         """Create blackboard artifact for URL phishing analysis using the working pattern"""
@@ -140,9 +142,14 @@ class ArtifactCreator:
             # Index the artifact for keyword searching (working pattern)
             try:
                 blackboard = Case.getCurrentCase().getSleuthkitCase().getBlackboard()
-                blackboard.indexArtifact(art)
+                # Check if indexArtifact method exists (newer Autopsy versions)
+                if hasattr(blackboard, 'indexArtifact'):
+                    blackboard.indexArtifact(art)
+                else:
+                    # Older Autopsy versions - skip indexing
+                    pass
             except Exception as e:
-                self.module.log(Level.WARNING, "Error indexing artifact (method may not exist in this Autopsy version): " + str(e))
+                self.module.log(Level.WARNING, "Error indexing artifact: " + str(e))
             
             # Post artifact to blackboard for UI updates (working pattern)
             try:
@@ -198,47 +205,55 @@ class ArtifactCreator:
             self.module.log(Level.WARNING, "Error extracting domain from URL: " + str(url) + " - " + str(e))
             return ""
 
+    def initialize_ml_bridge(self):
+        """Initialize the ML bridge for phishing classification"""
+        try:
+            if self.ml_bridge is None:
+                self.module.log(Level.INFO, "Creating new ML Bridge instance...")
+                self.ml_bridge = MLBridge(self.module)
+                self.module.log(Level.INFO, "ML Bridge instance created, attempting to start...")
+                if self.ml_bridge.start_bridge():
+                    self.module.log(Level.INFO, "ML Bridge initialized successfully")
+                    return True
+                else:
+                    self.module.log(Level.WARNING, "Failed to initialize ML Bridge")
+                    return False
+            return True
+        except Exception as e:
+            # Jython-compatible error logging
+            self.module.log(Level.WARNING, "Error initializing ML Bridge: " + str(e))
+            return False
+
     def classify_url_phishing(self, url):
         """
-        Phishing classification function - Ready for ML model integration
-        
-        This function is prepared for your phishing detection model.
-        Currently returns "PENDING" as a placeholder.
+        Phishing classification function using ML model via predict_bridge.py
         
         Args:
             url (str): The URL to classify
             
         Returns:
-            str: Classification result - currently "PENDING", ready for your model
+            str: Classification result from ML model
         """
-        
-        # TODO: Add your ML model integration here
-        # 
-        # When you're ready to integrate your ML model, replace this section with:
-        # 
-        # try:
-        #     # Load your trained model (do this once in __init__ for performance)
-        #     # model = load_model('path/to/your/phishing_model.pkl')
-        #     
-        #     # Extract features from URL
-        #     # features = extract_url_features(url)
-        #     
-        #     # Get prediction from your model
-        #     # prediction = model.predict([features])[0]
-        #     # confidence = model.predict_proba([features])[0].max()
-        #     
-        #     # Return classification based on prediction
-        #     # if prediction == 1 and confidence > 0.8:
-        #     #     return "PHISHING"
-        #     # elif prediction == 1 and confidence > 0.6:
-        #     #     return "SUSPICIOUS" 
-        #     # elif prediction == 0:
-        #     #     return "SAFE"
-        #     # else:
-        #     #     return "UNCERTAIN"
-        #         
-        # except Exception as e:
-        #     self.module.log(Level.WARNING, "ML model classification failed: " + str(e))
-        #     return "ERROR"
-        
-        return "PENDING"  # Placeholder classification - will show in results table
+        try:
+            # Initialize ML bridge if not already done
+            if self.ml_bridge is None:
+                if not self.initialize_ml_bridge():
+                    return "BRIDGE_ERROR"
+            
+            # Get prediction from ML model
+            classification = self.ml_bridge.predict_url(url)
+            return classification
+            
+        except Exception as e:
+            self.module.log(Level.WARNING, "ML model classification failed for " + str(url)[:50] + ": " + str(e))
+            return "ERROR"
+    
+    def shutdown_ml_bridge(self):
+        """Shutdown the ML bridge when module is done"""
+        try:
+            if self.ml_bridge:
+                self.ml_bridge.stop_bridge()
+                self.ml_bridge = None
+                self.module.log(Level.INFO, "ML Bridge shutdown completed")
+        except Exception as e:
+            self.module.log(Level.WARNING, "Error shutting down ML Bridge: " + str(e))

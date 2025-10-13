@@ -269,6 +269,12 @@ class UrlPhishingIngestModule(DataSourceIngestModule):
         except Exception as e:
             self.log(Level.WARNING, "Error generating summary report: " + str(e))
         
+        # Shutdown ML bridge
+        try:
+            self.artifact_creator.shutdown_ml_bridge()
+        except Exception as e:
+            self.log(Level.WARNING, "Error shutting down ML bridge: " + str(e))
+        
         message = IngestMessage.createMessage(IngestMessage.MessageType.DATA,
                                               "URL Phishing Analysis Completed", 
                                               "Successfully extracted URLs from all browser sources. Check Results Viewer -> 'URL Phishing Analysis' tab for findings with URL, Domain, Date Accessed, and Classification columns. Summary report with statistics and visualizations has been generated in the case Reports folder.")
@@ -286,7 +292,12 @@ class UrlPhishingIngestModule(DataSourceIngestModule):
 
     def shutDown(self):
         """Cleanup when module shuts down"""
-        pass
+        try:
+            # Ensure ML bridge is properly shutdown
+            if hasattr(self, 'artifact_creator') and self.artifact_creator:
+                self.artifact_creator.shutdown_ml_bridge()
+        except Exception as e:
+            self.log(Level.WARNING, "Error during shutdown: " + str(e))
 
 
 # Required module registration
