@@ -96,7 +96,7 @@ class UrlPhishingIngestModuleFactory(IngestModuleFactoryAdapter):
 
 
 class UrlPhishingIngestModule(DataSourceIngestModule):
-    """Comprehensive ingest module for extracting URLs from ALL browser sources"""
+    """Comprehensive ingest module for extracting URLs from browser HISTORY ONLY - VERSION 2.2"""
     
     _logger = Logger.getLogger(UrlPhishingIngestModuleFactory.moduleName)
 
@@ -179,22 +179,35 @@ class UrlPhishingIngestModule(DataSourceIngestModule):
             raise IngestModuleException("Failed to initialize custom artifact type: " + str(e))
 
     def create_classification_attribute(self, skCase):
-        """Create custom classification attribute"""
+        """Create custom classification attribute - REQUIRED for module operation"""
         try:
             # First try to get existing custom classification attribute
+            existing_attr = None
             try:
                 existing_attr = skCase.getAttributeType("TSK_PHISHING_CLASSIFICATION")
-                self.log(Level.INFO, "Custom Phishing Classification attribute already exists")
-                return
-            except:
-                # Attribute doesn't exist, so create it
-                skCase.addArtifactAttributeType("TSK_PHISHING_CLASSIFICATION", 
-                                               BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, 
-                                               "Phishing Classification")
-                self.log(Level.INFO, "Created custom Phishing Classification attribute")
+                if existing_attr is not None:
+                    self.log(Level.INFO, "Custom Phishing Classification attribute already exists")
+                    return
+            except Exception as e:
+                self.log(Level.INFO, "Custom Phishing Classification attribute not found, will create it: " + str(e))
+            
+            # Attribute doesn't exist or is null, so create it
+            skCase.addArtifactAttributeType("TSK_PHISHING_CLASSIFICATION", 
+                                           BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, 
+                                           "Phishing Classification")
+            self.log(Level.INFO, "Created custom Phishing Classification attribute")
+            
+            # Verify the attribute was created successfully
+            verify_attr = skCase.getAttributeType("TSK_PHISHING_CLASSIFICATION")
+            if verify_attr is None:
+                raise Exception("Failed to verify custom attribute creation - attribute is still null")
+            self.log(Level.INFO, "Verified custom Phishing Classification attribute is accessible")
+            
         except Exception as e:
-            # If creation fails, log but don't fail the module - we have TSK_COMMENT fallback
-            self.log(Level.INFO, "Custom classification attribute creation failed, will use TSK_COMMENT fallback: " + str(e))
+            # If creation fails, fail the module - no fallback allowed
+            error_msg = "CRITICAL: Custom classification attribute creation failed: " + str(e)
+            self.log(Level.SEVERE, error_msg)
+            raise IngestModuleException(error_msg)
 
     def process(self, dataSource, progressBar):
         """Main processing method - extracts URLs from ALL browser sources"""
