@@ -156,30 +156,42 @@ class ArtifactCreator:
             self.module.log(Level.WARNING, "Error creating URL artifact for " + str(url)[:50] + ": " + str(e))
 
     def extract_domain(self, url):
-        """Extract domain name from URL"""
+        """Extract domain name from URL including protocol and www prefix"""
         try:
             if not url or not url.strip():
                 return ""
             
-            # Handle URLs without protocol
-            if not url.startswith(('http://', 'https://', 'ftp://')):
-                url = 'http://' + url
-            
-            # Simple URL parsing without urlparse
-            # Remove protocol
-            if '://' in url:
-                url = url.split('://', 1)[1]
+            # Determine protocol
+            protocol = ""
+            if url.startswith('https://'):
+                protocol = "https://"
+                url_without_protocol = url[8:]  # Remove 'https://'
+            elif url.startswith('http://'):
+                protocol = "http://"
+                url_without_protocol = url[7:]   # Remove 'http://'
+            elif url.startswith('ftp://'):
+                protocol = "ftp://"
+                url_without_protocol = url[6:]   # Remove 'ftp://'
+            else:
+                # No protocol specified, default to http://
+                protocol = "http://"
+                url_without_protocol = url
             
             # Extract domain part (before first slash or query)
-            domain = url.split('/')[0].split('?')[0].split('#')[0]
+            domain_part = url_without_protocol.split('/')[0].split('?')[0].split('#')[0]
             
             # Remove port if present
-            if ':' in domain:
-                domain = domain.split(':')[0]
+            if ':' in domain_part:
+                domain_part = domain_part.split(':')[0]
             
-            # Remove www. prefix if present
-            if domain.startswith('www.'):
-                domain = domain[4:]
+            # Check if www prefix exists
+            www_prefix = ""
+            if domain_part.startswith('www.'):
+                www_prefix = "www."
+                domain_part = domain_part[4:]  # Remove 'www.'
+            
+            # Reconstruct domain with protocol and www prefix
+            domain = protocol + www_prefix + domain_part
                 
             return domain
         except Exception as e:
