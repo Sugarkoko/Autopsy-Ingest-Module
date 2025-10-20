@@ -41,3 +41,4 @@ Case*/
 # Misc
 ~$*
 *.tmp
+\n# Keep only predict_bridge.py from model_package\nmodel_package/**\n!model_package/\n!model_package/predict_bridge.py\n
